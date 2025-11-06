@@ -27,6 +27,8 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->tenant(Team::class, 'slug')
+            ->tenantRoutePrefix('team')
             ->colors([
                 'primary' => Color::Amber,
             ])

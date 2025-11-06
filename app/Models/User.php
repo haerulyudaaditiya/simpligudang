@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasTenants;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,7 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasTenants
 {
     use HasFactory, Notifiable, HasUuids;
 
@@ -51,10 +54,9 @@ class User extends Authenticatable implements FilamentUser
     }
 
     public function canAccessPanel(Panel $panel): bool
-{
-    return true;
-}
-
+    {
+        return $this->hasVerifiedEmail();
+    }
 
     /**
      * Tim (tenant) yang dimiliki atau diikuti oleh user ini.
@@ -64,5 +66,21 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsToMany(Team::class, 'team_user')
                     ->withPivot('role')
                     ->withTimestamps();
+    }
+
+    /**
+     * Mengembalikan daftar Team (Tenant) yang bisa diakses user ini.
+     */
+    public function getTenants(Panel $panel): Collection
+    {
+        return $this->teams;
+    }
+
+    /**
+     * Mengecek apakah user boleh mengakses sebuah Tenant.
+     */
+    public function canAccessTenant(Model $tenant): bool
+    {
+        return $this->teams()->where('team_id', $tenant->id)->exists();
     }
 }
