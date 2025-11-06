@@ -14,6 +14,8 @@ class User extends Authenticatable implements FilamentUser
 {
     use HasFactory, Notifiable, HasUuids;
 
+    protected $keyType = 'string';
+    public $incrementing = false;
     /**
      * The attributes that are mass assignable.
      *
@@ -49,9 +51,10 @@ class User extends Authenticatable implements FilamentUser
     }
 
     public function canAccessPanel(Panel $panel): bool
-    {
-        return $this->hasVerifiedEmail();
-    }
+{
+    return true;
+}
+
 
     /**
      * Tim (tenant) yang dimiliki atau diikuti oleh user ini.
@@ -59,7 +62,7 @@ class User extends Authenticatable implements FilamentUser
     public function teams(): BelongsToMany
     {
         return $this->belongsToMany(Team::class, 'team_user')
-                    ->withPivot('role') 
+                    ->withPivot('role')
                     ->withTimestamps();
     }
 }
