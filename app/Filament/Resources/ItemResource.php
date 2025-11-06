@@ -43,14 +43,22 @@ class ItemResource extends Resource
 
                         Select::make('category_id')
                             ->label('Kategori')
-                            ->relationship('category', 'name')
+                            ->relationship(
+                                'category',
+                                'name',
+                                fn (Builder $query) => $query->where('team_id', Filament::getTenant()->id)
+                            )
                             ->searchable()
                             ->preload()
                             ->required(),
 
                         Select::make('location_id')
                             ->label('Lokasi')
-                            ->relationship('location', 'name')
+                            ->relationship(
+                                'location',
+                                'name',
+                                fn (Builder $query) => $query->where('team_id', Filament::getTenant()->id)
+                            )
                             ->searchable()
                             ->preload()
                             ->required(),
