@@ -20,6 +20,11 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Facades\Filament;
+use Filament\Tables\Actions\Action;
+use Filament\Forms\Components\Select as FormSelect;
+use App\Models\User;
+use App\Models\Log;
+use Filament\Notifications\Notification;
 
 class ItemResource extends Resource
 {
@@ -177,6 +182,52 @@ class ItemResource extends Resource
                     ]),
             ])
             ->actions([
+                Action::make('check_out')
+                ->label('Check-out')
+                ->icon('heroicon-o-arrow-up-on-square')
+                ->color('warning')
+
+                // Hanya tampilkan tombol ini jika status barang "in_stock"
+                ->visible(fn (Item $record): bool => $record->status === 'in_stock')
+
+                // Ini adalah form di dalam modal (pop-up)
+                ->form([
+                    FormSelect::make('user_id')
+                        ->label('Dipinjam oleh')
+                        ->options(function () {
+                            $team = Filament::getTenant();
+                            if (!$team) {
+                                return []; // Jika tidak ada team, kembalikan array kosong
+                            }
+                            return $team->users->pluck('name', 'id');
+                        })
+                        ->searchable()
+                        ->preload()
+                        ->required(),
+                    Forms\Components\Textarea::make('notes')
+                        ->label('Catatan (Opsional)'),
+                ])
+
+                ->action(function (Item $record, array $data) {
+                    // 1. Ubah status barang
+                    $record->status = 'in_use';
+                    $record->save();
+
+                    // 2. Buat catatan log (Audit trail profesional)
+                    Log::create([
+                        'team_id' => Filament::getTenant()->id,
+                        'item_id' => $record->id,
+                        'user_id' => auth()->id(),
+                        'action' => 'check_out',
+                        'notes' => "Barang di-check-out ke user ID: {$data['user_id']}. Catatan: {$data['notes']}",
+                    ]);
+
+                    // Tampilkan notifikasi sukses
+                    Notification::make()
+                        ->title('Check-out Berhasil')
+                        ->success()
+                        ->send();
+                }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
