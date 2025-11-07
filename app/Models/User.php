@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Filament\Facades\Filament;
 
 class User extends Authenticatable implements FilamentUser, HasTenants
 {
@@ -83,4 +84,25 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     {
         return $this->teams()->where('team_id', $tenant->id)->exists();
     }
+
+    /**
+     * Helper method profesional untuk mengecek role user
+     * di tenant (team) yang sedang aktif.
+     */
+    public function hasTeamRole(string $role): bool
+{
+    $tenant = Filament::getTenant();
+
+    if (!$tenant) {
+        return false;
+    }
+
+    $teamPivot = $this->teams()->where('team_id', $tenant->id)->first();
+
+    if (!$teamPivot) {
+        return false;
+    }
+
+    return $teamPivot->pivot->role === $role;
+}
 }

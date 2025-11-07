@@ -10,15 +10,20 @@ use Illuminate\Support\Str;
 
 class AdminUserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $adminUser = User::create([
             'id' => Str::uuid(),
-            'name' => 'admin',
+            'name' => 'Admin Perusahaan',
             'email' => 'admin@example.com',
+            'email_verified_at' => now(),
+            'password' => Hash::make('password'),
+        ]);
+
+        $staffUser = User::create([
+            'id' => Str::uuid(),
+            'name' => 'Staff Gudang',
+            'email' => 'staff@example.com',
             'email_verified_at' => now(),
             'password' => Hash::make('password'),
         ]);
@@ -30,14 +35,7 @@ class AdminUserSeeder extends Seeder
             'owner_id' => $adminUser->id,
         ]);
 
-        $teamInovasi = Team::create([
-            'id' => Str::uuid(),
-            'name' => 'PT. Inovasi Cepat',
-            'slug' => 'inovasi',
-            'owner_id' => $adminUser->id,
-        ]);
-
         $adminUser->teams()->attach($teamAcme, ['role' => 'admin']);
-        $adminUser->teams()->attach($teamInovasi, ['role' => 'admin']);
+        $staffUser->teams()->attach($teamAcme, ['role' => 'staff']);
     }
 }
