@@ -183,51 +183,82 @@ class ItemResource extends Resource
             ])
             ->actions([
                 Action::make('check_out')
-                ->label('Check-out')
-                ->icon('heroicon-o-arrow-up-on-square')
-                ->color('warning')
+                    ->label('Check-out')
+                    ->icon('heroicon-o-arrow-up-on-square')
+                    ->color('warning')
 
-                // Hanya tampilkan tombol ini jika status barang "in_stock"
-                ->visible(fn (Item $record): bool => $record->status === 'in_stock')
+                    ->visible(fn (Item $record): bool => $record->status === 'in_stock')
 
-                // Ini adalah form di dalam modal (pop-up)
-                ->form([
-                    FormSelect::make('user_id')
-                        ->label('Dipinjam oleh')
-                        ->options(function () {
-                            $team = Filament::getTenant();
-                            if (!$team) {
-                                return []; // Jika tidak ada team, kembalikan array kosong
-                            }
-                            return $team->users->pluck('name', 'id');
-                        })
-                        ->searchable()
-                        ->preload()
-                        ->required(),
-                    Forms\Components\Textarea::make('notes')
-                        ->label('Catatan (Opsional)'),
-                ])
+                    ->form([
+                        FormSelect::make('user_id')
+                            ->label('Dipinjam oleh')
+                            ->options(function () {
+                                $team = Filament::getTenant();
+                                if (!$team) {
+                                    return []; // Jika tidak ada team, kembalikan array kosong
+                                }
+                                return $team->users->pluck('name', 'id');
+                            })
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+                        Forms\Components\Textarea::make('notes')
+                            ->label('Catatan (Opsional)'),
+                    ])
+                    ->action(function (Item $record, array $data) {
+                        // 1. Ubah status barang
+                        $record->status = 'in_use';
+                        $record->save();
 
-                ->action(function (Item $record, array $data) {
-                    // 1. Ubah status barang
-                    $record->status = 'in_use';
-                    $record->save();
+                        // 2. Buat catatan log (Audit trail profesional)
+                        Log::create([
+                            'team_id' => Filament::getTenant()->id,
+                            'item_id' => $record->id,
+                            'user_id' => auth()->id(),
+                            'action' => 'check_out',
+                            'notes' => "Barang di-check-out ke user ID: {$data['user_id']}. Catatan: {$data['notes']}",
+                        ]);
 
-                    // 2. Buat catatan log (Audit trail profesional)
-                    Log::create([
-                        'team_id' => Filament::getTenant()->id,
-                        'item_id' => $record->id,
-                        'user_id' => auth()->id(),
-                        'action' => 'check_out',
-                        'notes' => "Barang di-check-out ke user ID: {$data['user_id']}. Catatan: {$data['notes']}",
-                    ]);
+                        // Tampilkan notifikasi sukses
+                        Notification::make()
+                            ->title('Check-out Berhasil')
+                            ->success()
+                            ->send();
+                    }),
 
-                    // Tampilkan notifikasi sukses
-                    Notification::make()
-                        ->title('Check-out Berhasil')
-                        ->success()
-                        ->send();
-                }),
+                Action::make('check_in')
+                    ->label('Check-in')
+                    ->icon('heroicon-o-arrow-down-on-square')
+                    ->color('success') 
+
+                    // Hanya tampilkan jika barang TIDAK sedang "in_stock"
+                    ->visible(fn (Item $record): bool => $record->status !== 'in_stock')
+
+                    // Minta konfirmasi sebelum menjalankan
+                    ->requiresConfirmation()
+
+                    // Logika yang dijalankan saat dikonfirmasi
+                    ->action(function (Item $record) {
+                        // 1. Ubah status barang
+                        $record->status = 'in_stock';
+                        $record->save();
+
+                        // 2. Buat catatan log
+                        Log::create([
+                            'team_id' => Filament::getTenant()->id,
+                            'item_id' => $record->id,
+                            'user_id' => auth()->id(), // Admin yang melakukan check-in
+                            'action' => 'check_in',
+                            'notes' => 'Barang telah dikembalikan ke stok.',
+                        ]);
+
+                        // 3. Tampilkan notifikasi
+                        Notification::make()
+                            ->title('Check-in Berhasil')
+                            ->body('Barang telah dikembalikan ke stok.')
+                            ->success()
+                            ->send();
+                    }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
