@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Filament\Resources\ItemResource\Widgets;
+namespace App\Filament\Widgets;
 
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use App\Models\Item;
-use Filament\Facades\Filament; 
+use Filament\Facades\Filament;
 
 class StatsOverview extends BaseWidget
 {
