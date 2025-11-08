@@ -24,10 +24,10 @@ class LogPolicy
         return false;
     }
 
-    // Staff TIDAK BOLEH melihat detail Log
+    // Izinkan staff melihat log individual (untuk relation manager)
     public function view(User $user, Log $log): bool
     {
-        return false;
+        return $user->hasTeamRole('staff');
     }
 
     // TIDAK ADA YANG BOLEH MEMBUAT LOG MANUAL

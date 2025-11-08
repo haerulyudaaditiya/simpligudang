@@ -25,6 +25,7 @@ use Filament\Forms\Components\Select as FormSelect;
 use App\Models\User;
 use App\Models\Log;
 use Filament\Notifications\Notification;
+use App\Filament\Resources\ItemResource\RelationManagers\LogsRelationManager;
 
 class ItemResource extends Resource
 {
@@ -229,7 +230,7 @@ class ItemResource extends Resource
                 Action::make('check_in')
                     ->label('Check-in')
                     ->icon('heroicon-o-arrow-down-on-square')
-                    ->color('success') 
+                    ->color('success')
 
                     // Hanya tampilkan jika barang TIDAK sedang "in_stock"
                     ->visible(fn (Item $record): bool => $record->status !== 'in_stock')
@@ -272,7 +273,7 @@ class ItemResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            LogsRelationManager::class,
         ];
     }
 
