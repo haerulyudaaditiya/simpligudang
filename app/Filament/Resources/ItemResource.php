@@ -26,6 +26,7 @@ use App\Models\User;
 use App\Models\Log;
 use Filament\Notifications\Notification;
 use App\Filament\Resources\ItemResource\RelationManagers\LogsRelationManager;
+use Filament\Tables\Actions\ViewAction;
 
 class ItemResource extends Resource
 {
@@ -260,6 +261,8 @@ class ItemResource extends Resource
                             ->success()
                             ->send();
                     }),
+                Tables\Actions\ViewAction::make()
+                    ->visible(fn (): bool => auth()->user()->hasTeamRole('staff')),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -282,6 +285,7 @@ class ItemResource extends Resource
         return [
             'index' => Pages\ListItems::route('/'),
             'create' => Pages\CreateItem::route('/create'),
+            'view' => Pages\ViewItem::route('/{record}'),
             'edit' => Pages\EditItem::route('/{record}/edit'),
         ];
     }
