@@ -211,6 +211,8 @@ class ItemResource extends Resource
                         // 1. Ubah status barang
                         $record->status = 'in_use';
                         $record->save();
+                        $userPeminjam = User::find($data['user_id']);
+                        $namaPeminjam = $userPeminjam ? $userPeminjam->name : 'User Tidak Dikenal';
 
                         // 2. Buat catatan log (Audit trail profesional)
                         Log::create([
@@ -218,7 +220,7 @@ class ItemResource extends Resource
                             'item_id' => $record->id,
                             'user_id' => auth()->id(),
                             'action' => 'check_out',
-                            'notes' => "Barang di-check-out ke user ID: {$data['user_id']}. Catatan: {$data['notes']}",
+                            'notes' => "Barang di-check-out ke: {$namaPeminjam}. Catatan: {$data['notes']}",
                         ]);
 
                         // Tampilkan notifikasi sukses
