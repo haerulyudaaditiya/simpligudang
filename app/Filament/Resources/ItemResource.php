@@ -35,6 +35,12 @@ class ItemResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-archive-box';
     protected static ?string $navigationGroup = 'Manajemen Inventaris';
     protected static ?int $navigationSort = 3;
+    protected static ?string $recordTitleAttribute = 'name';
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'item_code'];
+    }
 
     public static function form(Form $form): Form
     {
