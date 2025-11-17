@@ -24,7 +24,10 @@ class ItemPolicy
 
     public function view(User $user, Item $item): bool
     {
-        return $user->hasTeamRole('staff');
+        return $user->teams()
+            ->where('team_id', $item->team_id)
+            ->wherePivotIn('role', ['admin', 'staff']) 
+            ->exists();
     }
 
     public function create(User $user): bool

@@ -121,45 +121,6 @@ class ItemResource extends Resource
 
                     ])->columns(1),
 
-                Section::make('Label & Identifikasi Fisik')
-                ->schema([
-                    Placeholder::make('qr_code')
-                        ->label('QR Code Barang')
-                        ->content(function (Item $record = null) {
-                            // Jika record belum dibuat (halaman Create), jangan tampilkan
-                            if (! $record) {
-                                return '-';
-                            }
-
-                            // Generate QR Code yang mengarah ke URL View item ini
-                            // Kita gunakan item_code sebagai isinya, atau URL lengkap
-                            // Skenario nyata: URL lengkap agar bisa discan HP
-                            $url = ItemResource::getUrl('view', ['record' => $record]);
-
-                            $qrCode = QrCode::size(150)
-                                ->color(0, 0, 0) // Warna Hitam
-                                ->generate($url);
-
-                            // Kembalikan sebagai HTML String agar dirender browser
-                            return new HtmlString('
-                                <div class="flex flex-col items-center justify-center p-4 border rounded-lg bg-white w-fit">
-                                    '.$qrCode.'
-                                    <div class="text-xs font-bold mt-2 text-gray-500">
-                                        '.($record->item_code ?? $record->name).'
-                                    </div>
-                                    <div class="text-[10px] text-gray-400">
-                                        Scan untuk detail
-                                    </div>
-                                </div>
-                            ');
-                        })
-                        ->columnSpan('full'),
-                ])
-                // Hanya tampilkan section ini di halaman View atau Edit
-                // Sembunyikan saat Create (karena ID belum ada)
-                ->visible(fn (string $operation) => $operation !== 'create'),
-            // --- AKHIR SECTION BARU ---
-
             ])
             ->columns(3);
     }
@@ -315,11 +276,32 @@ class ItemResource extends Resource
                     ->visible(fn (): bool => auth()->user()->hasTeamRole('staff')),
 
                 Action::make('print_qr')
-                    ->label('Print QR')
-                    ->icon('heroicon-o-printer')
-                    ->color('gray')
-                    ->url(fn (Item $record) => route('items.print-qr', $record)) // Kita akan buat rute ini
-                    ->openUrlInNewTab(), // Buka di tab baru
+                    ->label('QR Code')
+                    ->icon('heroicon-o-qr-code')
+                    ->color('info')
+                    ->modalHeading(fn (Item $record) => 'QR Code - ' . $record->name)
+                    ->modalContent(function (Item $record) {
+                        $url = ItemResource::getUrl('view', ['record' => $record]);
+                        $qrCode = QrCode::size(200)->color(0,0,0)->generate($url);
+
+                        return new HtmlString('
+                            <div class="flex flex-col items-center justify-center p-4">
+                                '.$qrCode.'
+                                <p class="text-sm text-gray-500 mt-2 font-mono">'.$record->item_code.'</p>
+                                <p class="text-xs text-gray-400">Scan untuk detail</p>
+                            </div>
+                        ');
+                    })
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Tutup')
+                    ->extraModalFooterActions(fn (Item $record) => [
+                        Action::make('open_print_page')
+                            ->label('Buka Halaman Cetak')
+                            ->icon('heroicon-o-printer')
+                            ->url(route('items.print-qr', $record))
+                            ->openUrlInNewTab()
+                            ->color('primary'),
+                    ]),
 
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
