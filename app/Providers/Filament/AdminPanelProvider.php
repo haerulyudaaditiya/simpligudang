@@ -30,6 +30,7 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->tenant(Team::class, 'slug')
             ->tenantRoutePrefix('team')
+            ->databaseNotifications()
             ->colors([
                 'primary' => Color::Amber,
             ])

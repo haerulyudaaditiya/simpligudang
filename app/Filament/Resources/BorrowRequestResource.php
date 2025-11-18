@@ -12,6 +12,9 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Facades\Filament;
+use Illuminate\Support\Facades\DB; 
+use Filament\Notifications\Notification;
 
 class BorrowRequestResource extends Resource
 {
@@ -83,39 +86,45 @@ class BorrowRequestResource extends Resource
             ->defaultSort('created_at', 'desc')
 
             ->actions([
-                // --- ACTION 1: APPROVE (Hanya Admin) ---
                 Tables\Actions\Action::make('approve')
                     ->label('Setujui')
                     ->icon('heroicon-o-check')
                     ->color('success')
-                    // Hanya muncul jika pending & user adalah admin
                     ->visible(fn (BorrowRequest $record) => $record->status === 'pending' && auth()->user()->hasTeamRole('admin'))
                     ->requiresConfirmation()
                     ->action(function (BorrowRequest $record) {
-                        // LOGIC TRANSALSI DB (PENTING!)
+                        // 1. Jalankan Logika Bisnis (Update status & stok)
                         DB::transaction(function () use ($record) {
-                            // 1. Update Status Request
                             $record->update([
                                 'status' => 'approved',
                                 'processed_by' => auth()->id(),
                                 'processed_at' => now(),
                             ]);
 
-                            // 2. Kurangi Stok Barang (Real Impact)
                             $item = $record->item;
                             $item->decrement('quantity');
 
-                            // 3. Catat di Log Audit Global (yang kita buat sebelumnya)
                             \App\Models\Log::create([
                                 'team_id' => $record->team_id,
                                 'item_id' => $item->id,
-                                'user_id' => $record->user_id, // User pemohon
-                                'action' => 'check_out', // Kita pakai istilah check_out sistem lama
+                                'user_id' => $record->user_id,
+                                'action' => 'check_out',
                                 'notes' => 'Peminjaman disetujui oleh Admin via Request #' . $record->id,
                             ]);
                         });
 
-                        Notification::make()->title('Permintaan Disetujui')->success()->send();
+                        // 2. Notifikasi Sukses untuk ADMIN (Toast Hijau di pojok)
+                        Notification::make()
+                            ->title('Permintaan Disetujui')
+                            ->success()
+                            ->send();
+
+                        // Kita kirim ke $record->user (User yang membuat request)
+                        Notification::make()
+                            ->title('Permintaan Anda Disetujui')
+                            ->body("Barang '{$record->item->name}' siap diambil. Silakan cek gudang.")
+                            ->success() // Warna hijau
+                            ->sendToDatabase($record->user);
                     }),
 
                 // --- ACTION 2: REJECT (Hanya Admin) ---

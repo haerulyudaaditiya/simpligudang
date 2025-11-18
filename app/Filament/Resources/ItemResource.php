@@ -58,7 +58,7 @@ class ItemResource extends Resource
 
     public static function getNavigationBadgeColor(): ?string
     {
-        return 'danger'; 
+        return 'danger';
     }
 
     public static function getGloballySearchableAttributes(): array
@@ -222,7 +222,7 @@ class ItemResource extends Resource
                     ->icon('heroicon-o-arrow-up-on-square')
                     ->color('warning')
 
-                    ->visible(fn (Item $record): bool => $record->status === 'in_stock')
+                    ->visible(fn (Item $record): bool => $record->status === 'in_stock' && auth()->user()->hasTeamRole('admin'))
 
                     ->form([
                         FormSelect::make('user_id')

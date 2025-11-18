@@ -71,4 +71,9 @@ class Team extends Model
     {
         return $this->hasMany(Log::class);
     }
+
+    public function borrowRequests(): HasMany
+    {
+        return $this->hasMany(BorrowRequest::class);
+    }
 }
