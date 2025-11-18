@@ -27,9 +27,12 @@ use App\Models\Log;
 use Filament\Notifications\Notification;
 use App\Filament\Resources\ItemResource\RelationManagers\LogsRelationManager;
 use Filament\Tables\Actions\ViewAction;
-use SimpleSoftwareIO\QrCode\Facades\QrCode; // Library QR
-use Illuminate\Support\HtmlString; // Untuk render HTML
-use Filament\Forms\Components\Placeholder; // Komponen penampung
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Support\HtmlString;
+use Filament\Forms\Components\Placeholder;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
+use pxlrbt\FilamentExcel\Columns\Column;
 
 class ItemResource extends Resource
 {
@@ -308,6 +311,23 @@ class ItemResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    ExportBulkAction::make()
+                        ->label('Export Laporan')
+                        ->exports([
+                            ExcelExport::make()
+                                ->fromTable()
+                                ->withFilename(fn ($resource) => $resource::getModelLabel() . '-' . date('Y-m-d'))
+                                ->withColumns([
+                                    Column::make('name')->heading('Nama Barang'),
+                                    Column::make('item_code')->heading('Kode / Serial'),
+                                    Column::make('category.name')->heading('Kategori'), 
+                                    Column::make('location.name')->heading('Lokasi'),
+                                    Column::make('status')->heading('Status'),
+                                    Column::make('quantity')->heading('Stok'),
+                                    Column::make('price')->heading('Harga Beli'),
+                                    Column::make('purchase_date')->heading('Tanggal Beli'),
+                                ]),
+                        ]),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);

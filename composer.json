@@ -10,6 +10,7 @@
         "filament/filament": "^3.0-stable",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
+        "pxlrbt/filament-excel": "2.3",
         "simplesoftwareio/simple-qrcode": "^4.2"
     },
     "require-dev": {
