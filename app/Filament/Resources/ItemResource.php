@@ -43,6 +43,24 @@ class ItemResource extends Resource
     protected static ?int $navigationSort = 3;
     protected static ?string $recordTitleAttribute = 'name';
 
+    public static function getNavigationBadge(): ?string
+    {
+        $tenant = Filament::getTenant();
+
+        if (!$tenant) return null;
+
+        $lowStockCount = static::getModel()::where('team_id', $tenant->id)
+            ->where('quantity', '<=', 5)
+            ->count();
+
+        return $lowStockCount > 0 ? (string) $lowStockCount : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'danger'; 
+    }
+
     public static function getGloballySearchableAttributes(): array
     {
         return ['name', 'item_code'];
@@ -167,7 +185,10 @@ class ItemResource extends Resource
 
                 TextColumn::make('quantity')
                     ->label('Kuantitas')
-                    ->sortable(),
+                    ->sortable()
+                    ->color(fn (string $state): string => $state <= 5 ? 'danger' : 'success')
+                    ->icon(fn (string $state): ?string => $state <= 5 ? 'heroicon-o-exclamation-triangle' : null)
+                    ->weight('bold'),
 
                 TextColumn::make('price')
                     ->label('Harga Beli')
@@ -320,7 +341,7 @@ class ItemResource extends Resource
                                 ->withColumns([
                                     Column::make('name')->heading('Nama Barang'),
                                     Column::make('item_code')->heading('Kode / Serial'),
-                                    Column::make('category.name')->heading('Kategori'), 
+                                    Column::make('category.name')->heading('Kategori'),
                                     Column::make('location.name')->heading('Lokasi'),
                                     Column::make('status')->heading('Status'),
                                     Column::make('quantity')->heading('Stok'),
