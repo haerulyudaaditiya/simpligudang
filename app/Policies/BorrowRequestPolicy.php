@@ -21,6 +21,25 @@ class BorrowRequestPolicy
      */
     public function view(User $user, BorrowRequest $borrowRequest): bool
     {
+        $membership = $user->teams()
+            ->where('team_id', $borrowRequest->team_id)
+            ->withPivot('role')
+            ->first();
+
+        if (! $membership) {
+            return false;
+        }
+
+        $role = $membership->pivot->role;
+
+        if ($role === 'admin') {
+            return true;
+        }
+
+        if ($role === 'staff') {
+            return $borrowRequest->user_id === $user->id;
+        }
+
         return false;
     }
 

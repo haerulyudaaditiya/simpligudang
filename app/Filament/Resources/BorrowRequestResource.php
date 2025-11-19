@@ -13,7 +13,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Facades\Filament;
-use Illuminate\Support\Facades\DB; 
+use Illuminate\Support\Facades\DB;
 use Filament\Notifications\Notification;
 
 class BorrowRequestResource extends Resource
@@ -147,6 +147,14 @@ class BorrowRequestResource extends Resource
                         ]);
                         Notification::make()->title('Permintaan Ditolak')->danger()->send();
                     }),
+
+                Tables\Actions\Action::make('download_bast')
+                    ->label('Download BAST')
+                    ->icon('heroicon-o-document-text')
+                    ->color('primary')
+                    ->visible(fn (BorrowRequest $record) => in_array($record->status, ['approved', 'returned']))
+                    ->url(fn (BorrowRequest $record) => route('borrow-requests.bast', $record))
+                    ->openUrlInNewTab(),
             ]);
     }
 
