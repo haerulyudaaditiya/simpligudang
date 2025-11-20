@@ -37,6 +37,7 @@ use App\Filament\Resources\ItemResource\RelationManagers\MaintenancesRelationMan
 use Filament\Infolists\Infolist;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\Group;
+use Filament\Infolists\Components\Section as InfolistSection;
 
 class ItemResource extends Resource
 {
@@ -380,7 +381,7 @@ class ItemResource extends Resource
     {
         return $infolist
             ->schema([
-                Section::make('Ringkasan Aset')
+                InfolistSection::make('Ringkasan Aset')
                     ->schema([
                         TextEntry::make('name')->label('Nama Barang'),
                         TextEntry::make('item_code')->label('Kode'),
@@ -395,7 +396,7 @@ class ItemResource extends Resource
                             }),
                     ])->columns(3),
 
-                Section::make('Analisis Biaya (Financials)')
+                InfolistSection::make('Analisis Biaya (Financials)')
                     ->schema([
                         TextEntry::make('price')
                             ->label('Harga Beli Awal')
