@@ -70,4 +70,9 @@ class Item extends Model
     {
         return $this->hasMany(Log::class)->latest(); // Selalu urutkan dari yang terbaru
     }
+
+    public function maintenances(): HasMany
+    {
+        return $this->hasMany(Maintenance::class);
+    }
 }
