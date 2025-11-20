@@ -33,6 +33,7 @@ use Filament\Forms\Components\Placeholder;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use pxlrbt\FilamentExcel\Columns\Column;
+use App\Filament\Resources\ItemResource\RelationManagers\MaintenancesRelationManager;
 
 class ItemResource extends Resource
 {
@@ -358,6 +359,7 @@ class ItemResource extends Resource
     {
         return [
             LogsRelationManager::class,
+            MaintenancesRelationManager::class,
         ];
     }
 
