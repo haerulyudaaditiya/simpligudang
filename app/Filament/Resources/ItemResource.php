@@ -34,6 +34,9 @@ use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use pxlrbt\FilamentExcel\Columns\Column;
 use App\Filament\Resources\ItemResource\RelationManagers\MaintenancesRelationManager;
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\Group;
 
 class ItemResource extends Resource
 {
@@ -371,5 +374,49 @@ class ItemResource extends Resource
             'view' => Pages\ViewItem::route('/{record}'),
             'edit' => Pages\EditItem::route('/{record}/edit'),
         ];
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make('Ringkasan Aset')
+                    ->schema([
+                        TextEntry::make('name')->label('Nama Barang'),
+                        TextEntry::make('item_code')->label('Kode'),
+                        TextEntry::make('status')
+                            ->badge()
+                            ->color(fn (string $state): string => match ($state) {
+                                'in_stock' => 'success',
+                                'in_use' => 'warning',
+                                'under_repair' => 'danger',
+                                'lost' => 'gray',
+                                default => 'info',
+                            }),
+                    ])->columns(3),
+
+                Section::make('Analisis Biaya (Financials)')
+                    ->schema([
+                        TextEntry::make('price')
+                            ->label('Harga Beli Awal')
+                            ->money('IDR'),
+
+                        // --- LOGIC ADVANCE: MENGHITUNG TOTAL MAINTENANCE ---
+                        TextEntry::make('maintenance_cost')
+                            ->label('Total Biaya Servis')
+                            ->money('IDR')
+                            ->state(fn (Item $record) => $record->maintenances()->sum('cost')),
+
+                        // --- THE HOLY GRAIL: TCO ---
+                        TextEntry::make('tco')
+                            ->label('Total Cost of Ownership (TCO)')
+                            ->helperText('Total investasi perusahaan untuk aset ini sejauh ini.')
+                            ->money('IDR')
+                            ->weight('bold')
+                            ->size(TextEntry\TextEntrySize::Large)
+                            ->color('primary')
+                            ->state(fn (Item $record) => $record->price + $record->maintenances()->sum('cost')),
+                    ])->columns(3),
+            ]);
     }
 }
